@@ -1,7 +1,12 @@
-#!/bin/sh
+#!/usr/bin/perl -w
 
-# $Id: gcc-wrapper,v 1.1 2004-01-12 16:49:29-08 kst Exp $
+# $Id: gcc-wrapper,v 1.2 2004-01-22 07:34:11-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/gcc-wrapper,v $
+
+use strict;
+
+sub Background_Job(@);
+sub Redirected_Background_Job($$@);
 
 #
 # gcc-wrapper
@@ -17,18 +22,88 @@
 # See also <http://www.sdsc.edu/~kst/gcc-3.2-bug/>
 #
 
-out=/tmp/gcc-$$.out
-err=/tmp/gcc-$$.err
-msg1='changing search order for system directory'
-msg2='as it has already been specified as a non-system directory'
+my $out_file = "/tmp/gcc-$$.out";
+my $err_file = "/tmp/gcc-$$.err";
+my $msg1 = 'changing search order for system directory';
+my $msg2 = 'as it has already been specified as a non-system directory';
 
-gcc.real "$@" >$out 2>$err & gcc_pid=$!
-tail +1f $out & out_pid=$!
-( tail +1f $err | egrep -v "$msg1|$msg2" ) 1>&2 & err_pid=$!
+#
+# Invoke gcc in background with stdout and stderr redirected to
+# temporary files.
+#
+my $gcc_pid = Background_Job '-stdout', $out_file,
+                             '-stderr', $err_file,
+                             'gcc.real', @ARGV;
+#
+# Wait until stdout and stderr files have been created.
+#
+while (not -e $out_file and not -e $err_file) {
+    ;
+}
 
-wait $gcc_pid
-gcc_status=$?
-trap '' CHLD # Don't print notification on termination of "tail" processes
-/bin/kill $out_pid $err_pid
-rm -f $out $err
-exit $gcc_status
+#
+# Use "tail +1f" to follow stdout and stderr.
+#
+my $stdout_pid = Background_Job "tail +1f $out_file";
+my $stderr_pid = Background_Job
+                     "( tail +1f $err_file | egrep -v \"$msg1|$msg2\" ) 1>&2";
+
+#
+# When gcc finishes, clean up and return proper status.
+#
+waitpid $gcc_pid, 0;
+my $gcc_status = $?;
+kill 'INT', $stdout_pid, $stderr_pid;
+#
+# Avoid zombies (is this necessary?)
+#
+waitpid $stdout_pid, 0;
+waitpid $stderr_pid, 0;
+unlink $out_file, $err_file;
+if (($gcc_status & 0xff) == 0) {
+    exit($gcc_status >> 8);
+}
+else {
+    die sprintf "gcc killed by signal, \$? = 0x%x\n", $gcc_status;
+}
+
+########################################################################
+
+#
+# Submits a job in background and returns the PID
+#
+sub Background_Job(@) {
+    my(@command) = @_;
+    my $stdin  = undef;
+    my $stdout = undef;
+    my $stderr = undef;
+
+    while (1) {
+        if    ($_[0] eq '-stdin')  { shift; $stdin  = shift; }
+        elsif ($_[0] eq '-stdout') { shift; $stdout = shift; }
+        elsif ($_[0] eq '-stderr') { shift; $stderr = shift; }
+        else { last; }
+    }
+
+    my $pid;
+    if (($pid = fork) == 0) {
+        # I'm the child, run the command
+        if (defined $stdin) {
+            open STDIN, ">$stdin"
+                or die "gcc-wrapper failed to open stdin $stdin\n";
+        }
+        if (defined $stdout) {
+            open STDOUT, ">$stdout"
+                or die "gcc-wrapper failed to open stdout $stdout\n";
+        }
+        if (defined $stderr) {
+            open STDERR, ">$stderr"
+                or die "gcc-wrapper failed to open stderr $stderr\n";
+        }
+        exec @command;
+    }
+    else {
+        # I'm the parent, return the child pid
+        return $pid;
+    }
+} # Background_Job
