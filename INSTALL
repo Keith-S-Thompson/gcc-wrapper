@@ -1,35 +1,11 @@
-# $Id: INSTALL,v 1.1 2004-01-12 16:49:28-08 kst Exp $
+# $Id: INSTALL,v 1.2 2004-01-22 17:31:08-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/INSTALL,v $
 
-Installation instructions for gcc-wrapper
+To install gcc-wrapper, run the "install-gcc-wrapper" script.
+Run "install-gcc-wrapper -help" to print a help message.
 
-There is no installation script for gcc-wrapper (yet); to install it,
-you'll need to copy the files manually.
+Once you've installed it, you need to add the bin directory to your
+$PATH in front of the directory containing the actual gcc.
 
-1.  Create an installation directory (I'll call it DIR).
-
-2.  Copy the gcc-wrapper script to DIR/gcc-wrapper
-    Adjust the "#!" line (line 1) if your Perl is not /usr/bin/perl
-
-3.  cd DIR
-
-4.  ln -s gcc-wrapper gcc
-
-4a. ln -s gcc-wrapper cc
-    # Do this only if "cc" is a symbolic link to "gcc".
-
-5.  ln -s /usr/bin/gcc gcc.real
-    # Adjust "/usr/bin/gcc" to the location where your gcc is actually
-    # installed.  This is so gcc-wrapper (invoked as "gcc") can
-    # find the real gcc (invoked by gcc-wrapper as "gcc.real").
-
-5a. ln -s /usr/bin/cc gcc.real
-    # Do this only if "cc" is a symbolic link to "gcc", as it commonly
-    # is on Linux systems.
-
-6.  Add DIR to your $PATH in front of the directory containing the
-    actual gcc.
-
-Now the "gcc" command (and the "cc" command, if you've followed steps
-4a and 5a) will invoke the gcc-wrapper script, which will in turn
-invoke your system's gcc command via the "gcc.real" symlink.
+Now the "gcc" command  will invoke the gcc-wrapper script, which will
+in turn invoke your system's gcc command via the "gcc.real" symlink.
