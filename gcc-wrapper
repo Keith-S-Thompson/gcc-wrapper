@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: gcc-wrapper,v 1.2 2004-01-22 07:34:11-08 kst Exp $
+# $Id: gcc-wrapper,v 1.3 2004-01-22 08:58:21-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/gcc-wrapper,v $
 
 use strict;
@@ -73,7 +73,7 @@ else {
 # Submits a job in background and returns the PID
 #
 sub Background_Job(@) {
-    my(@command) = @_;
+    my @command;
     my $stdin  = undef;
     my $stdout = undef;
     my $stderr = undef;
@@ -84,6 +84,8 @@ sub Background_Job(@) {
         elsif ($_[0] eq '-stderr') { shift; $stderr = shift; }
         else { last; }
     }
+
+    @command = @_;
 
     my $pid;
     if (($pid = fork) == 0) {
