@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: gcc-wrapper,v 1.5 2004-01-22 09:12:56-08 kst Exp $
+# $Id: gcc-wrapper,v 1.6 2004-01-22 09:19:42-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/gcc-wrapper,v $
 
 use strict;
@@ -69,13 +69,13 @@ my $gcc_status = $?;
 Log "Done waiting, status = $gcc_status\n";
 Log "Killing $stdout_pid and $stderr_pid\n";
 kill 'INT', $stdout_pid, $stderr_pid;
-#
-# Avoid zombies (is this necessary?)
-#
-Log "Waiting for $stdout_pid\n";
-waitpid $stdout_pid, 0;
-Log "Waiting for $stderr_pid\n";
-waitpid $stderr_pid, 0;
+# #
+# # Avoid zombies (is this necessary?)
+# #
+# Log "Waiting for $stdout_pid\n";
+# waitpid $stdout_pid, 0;
+# Log "Waiting for $stderr_pid\n";
+# waitpid $stderr_pid, 0;
 Log "Deleting temp files\n";
 unlink $out_file, $err_file;
 Log "Done\n";
