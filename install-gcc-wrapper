@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: install-gcc-wrapper,v 1.4 2004-02-05 18:22:02-08 kst Exp $
+# $Id: install-gcc-wrapper,v 1.5 2004-02-05 18:24:06-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/install-gcc-wrapper,v $
 
 ########################################################################
@@ -100,7 +100,7 @@ while [ $# -ne 0 ] ; do
             usage
             ;;
         /*)
-            if [ "$install_dir" -ne "" ] ; then
+            if [ "$install_dir" != "" ] ; then
                 echo "install-dir already specified" 1>&2
                 usage
             fi
