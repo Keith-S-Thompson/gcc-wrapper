@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: install-gcc-wrapper,v 1.3 2004-02-02 17:58:41-08 kst Exp $
+# $Id: install-gcc-wrapper,v 1.4 2004-02-05 18:22:02-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/install-gcc-wrapper,v $
 
 ########################################################################
@@ -57,7 +57,7 @@ usage() {
 Usage: $0 [options] install-dir
 install-dir may not be an existing directory; it will be created.
     -help      Display this message and exit
-    -gcc cmd   Full path of gcc executable; default is searched in \$PATH
+    -gcc cmd   Full path of gcc executable; default is searched in $PATH
                gcc version must be 3.2.
     -force     Disable check for gcc version 3.2
                Disable check that specified gcc command is named "gcc"
