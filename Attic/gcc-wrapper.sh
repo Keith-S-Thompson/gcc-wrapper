@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: gcc-wrapper.sh,v 1.1 2004-01-22 09:36:42-08 kst Exp $
+# $Id: gcc-wrapper.sh,v 1.2 2004-01-22 16:39:34-08 kst dead $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/Attic/gcc-wrapper.sh,v $
 
 #
