@@ -1,5 +1,7 @@
-# $Id: README,v 1.1 2004-01-12 16:49:29-08 kst Exp $
+# $Id: README,v 1.2 2004-02-02 17:57:17-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/README,v $
+
+This is gcc-wrapper release 0.1.
 
 gcc-wrapper is a small shell script that invokes gcc with specified
 arguments, sending stdout to stdout and stderr to stderr, and returning
@@ -30,6 +32,10 @@ This gcc-wrapper script is a quick and dirty workaround.  The best
 solution is to upgrade your gcc and/or your operating system (for
 example, Red Hat 9 includes gcc 3.2.2, which doesn't produce the
 warning).
+
+The gcc-wrapper script does not have an option to print its own
+version number or a help message, since it passes all its arguments
+on to the target gcc command.
 
 	-- Keith Thompson <kst@sdsc.edu>
 	   San Diego Supercomputer Center
