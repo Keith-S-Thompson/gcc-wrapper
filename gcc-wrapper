@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# $Id: gcc-wrapper,v 1.1 2004-01-12 16:49:29-08 kst Exp $
+# $Source: /home/kst/CVS_smov/tools/gcc-wrapper/gcc-wrapper,v $
+
+#
+# gcc-wrapper
+#
+# Invoke gcc with specified arguments, sending stdout to stdout and
+# stderr to stderr and returning gcc's exit status.
+#
+# Filter out any occurrences of "warning: changing search order" or
+# "as it has already been specified" on stderr.
+#
+# This is a workaround for Globus Bugzilla # 488,
+# <http://bugzilla.globus.org/bugzilla/show_bug.cgi?id=488>
+# See also <http://www.sdsc.edu/~kst/gcc-3.2-bug/>
+#
+
+out=/tmp/gcc-$$.out
+err=/tmp/gcc-$$.err
+msg1='changing search order for system directory'
+msg2='as it has already been specified as a non-system directory'
+
+gcc.real "$@" >$out 2>$err & gcc_pid=$!
+tail +1f $out & out_pid=$!
+( tail +1f $err | egrep -v "$msg1|$msg2" ) 1>&2 & err_pid=$!
+
+wait $gcc_pid
+gcc_status=$?
+trap '' CHLD # Don't print notification on termination of "tail" processes
+/bin/kill $out_pid $err_pid
+rm -f $out $err
+exit $gcc_status
