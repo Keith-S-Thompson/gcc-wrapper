@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: install-gcc-wrapper,v 1.1 2004-01-22 17:31:22-08 kst Exp $
+# $Id: install-gcc-wrapper,v 1.2 2004-02-02 17:51:37-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/install-gcc-wrapper,v $
 
 usage() {
@@ -41,7 +41,7 @@ while [ $# -ne 0 ] ; do
                 echo "-gcc option requires an argument" 1>&2
                 usage
             fi
-            gcc=$1
+            gcc_location=$1
             ;;
         -force)
             force=1
