@@ -1,0 +1,129 @@
+#!/bin/sh
+
+# $Id: install-gcc-wrapper,v 1.1 2004-01-22 17:31:22-08 kst Exp $
+# $Source: /home/kst/CVS_smov/tools/gcc-wrapper/install-gcc-wrapper,v $
+
+usage() {
+    cat <<"EOF"
+Usage: $0 [options] install-dir
+install-dir may not be an existing directory; it will be created.
+    -help      Display this message and exit
+    -gcc cmd   Full path of gcc executable; default is searched in \$PATH
+               gcc version must be 3.2.
+    -force     Disable check for gcc version 3.2
+               Disable check that specified gcc command is named "gcc"
+EOF
+    exit 1
+}
+
+try() {
+    echo "% $@"
+    $@ || die "Command failed"
+}
+
+die() {
+    echo ">>> $@" 1>&2
+    exit 1
+}
+
+unset install_dir
+unset gcc_location
+force=0
+
+while [ $# -ne 0 ] ; do
+    case "$1" in
+        -help)
+            usage
+            ;;
+        -gcc)
+            shift
+            if [ $# -eq 0 ] ; then
+                echo "-gcc option requires an argument" 1>&2
+                usage
+            fi
+            gcc=$1
+            ;;
+        -force)
+            force=1
+            ;;
+        -*)
+            echo "Unrecognized option \"$1\"" 1>&2
+            usage
+            ;;
+        /*)
+            if [ "$install_dir" -ne "" ] ; then
+                echo "install-dir already specified" 1>&2
+                usage
+            fi
+            install_dir=$1
+            ;;
+        *)
+            echo "Unrecognized argument \"$1\"" 1>&2
+            usage
+            ;;
+    esac
+    shift
+done
+
+if [ ! -f gcc-wrapper ] ; then
+    echo "No gcc-wrapper in current directory" 1>&2
+    usage
+fi
+if [ ! -f README ] ; then
+    echo "No README file in current directory" 1>&2
+    usage
+fi
+
+if [ "$install_dir" = "" ] ; then
+    echo "No installation directory specified" 1>&2
+    usage
+fi
+
+if [ -d "$install_dir" ] ; then
+    echo "Installation directory $install_dir already exists" 1>&2
+    usage
+fi
+
+if [ "$gcc_location" = "" ] ; then
+    for dir in `echo $PATH | tr : ' '` ; do
+        if [ -x "$dir/gcc" ] ; then
+            gcc_location="$dir/gcc"
+            break
+        fi
+    done
+fi
+
+if [ "$gcc_location" = "" ] ; then
+    echo "No gcc found or specified" 1>&2
+    usage
+fi
+
+if [ "`basename $gcc_location`" != "gcc" ] ; then
+    if [ $force = 1 ] ; then
+        echo "Warning: $gcc_location is not named \"gcc\"" 1>&2
+    else
+        echo "$gcc_location is not named \"gcc\"" 1>&2
+        usage
+    fi
+fi
+
+gcc_version=`$gcc_location --version | awk 'NR==1{print $3}'`
+if [ "$gcc_version" != "3.2" ] ; then
+    if [ $force = 1 ] ; then
+        echo "Warning: gcc version is $gcc_version, expected 3.2" 1>&2
+    else
+        echo "gcc version is $gcc_version, expected 3.2" 1>&2
+        usage
+    fi
+fi
+
+try mkdir $install_dir
+try mkdir $install_dir/bin
+try cp -p gcc-wrapper $install_dir/bin/gcc-wrapper
+try cp -p README $install_dir/README
+cd $install_dir/bin || die "cd failed"
+try ln -s gcc-wrapper gcc
+try ln -s $gcc_location gcc.real
+
+echo ''
+echo "===== See $install_dir/README ====="
