@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 
-# $Id: gcc-wrapper,v 1.3 2004-01-22 08:58:21-08 kst Exp $
+# $Id: gcc-wrapper,v 1.4 2004-01-22 09:10:23-08 kst Exp $
 # $Source: /home/kst/CVS_smov/tools/gcc-wrapper/gcc-wrapper,v $
 
 use strict;
 
 sub Background_Job(@);
-sub Redirected_Background_Job($$@);
+sub Log(@);
 
 #
 # gcc-wrapper
@@ -22,6 +22,10 @@ sub Redirected_Background_Job($$@);
 # See also <http://www.sdsc.edu/~kst/gcc-3.2-bug/>
 #
 
+my $start_time = time;
+
+Log "gcc-wrapper @ARGV\n";
+
 my $out_file = "/tmp/gcc-$$.out";
 my $err_file = "/tmp/gcc-$$.err";
 my $msg1 = 'changing search order for system directory';
@@ -31,35 +35,50 @@ my $msg2 = 'as it has already been specified as a non-system directory';
 # Invoke gcc in background with stdout and stderr redirected to
 # temporary files.
 #
+Log "Invoking gcc.real in background\n";
 my $gcc_pid = Background_Job '-stdout', $out_file,
                              '-stderr', $err_file,
                              'gcc.real', @ARGV;
+Log "gcc_pid = $gcc_pid\n";
 #
 # Wait until stdout and stderr files have been created.
 #
-while (not -e $out_file and not -e $err_file) {
-    ;
+Log "Waiting for \$out_file and \$err_file\n";
+my $count = 0;
+while (not -e $out_file or not -e $err_file) {
+    $count ++;
 }
+Log "Done waiting, count = $count\n";
 
 #
 # Use "tail +1f" to follow stdout and stderr.
 #
+Log "Invoking \"tail +1f\" in background\n";
 my $stdout_pid = Background_Job "tail +1f $out_file";
+Log "stdout_pid = $stdout_pid\n";
 my $stderr_pid = Background_Job
                      "( tail +1f $err_file | egrep -v \"$msg1|$msg2\" ) 1>&2";
+Log "stderr_pid = $stderr_pid\n";
 
 #
 # When gcc finishes, clean up and return proper status.
 #
+Log "Waiting for gcc, pid $gcc_pid\n";
 waitpid $gcc_pid, 0;
 my $gcc_status = $?;
+Log "Done waiting, status = $gcc_status\n";
+Log "Killing $stdout_pid and $stderr_pid\n";
 kill 'INT', $stdout_pid, $stderr_pid;
 #
 # Avoid zombies (is this necessary?)
 #
+Log "Waiting for $stdout_pid\n";
 waitpid $stdout_pid, 0;
+Log "Waiting for $stderr_pid\n";
 waitpid $stderr_pid, 0;
+Log "Deleting temp files\n";
 unlink $out_file, $err_file;
+Log "Done\n";
 if (($gcc_status & 0xff) == 0) {
     exit($gcc_status >> 8);
 }
@@ -78,6 +97,7 @@ sub Background_Job(@) {
     my $stdout = undef;
     my $stderr = undef;
 
+    Log "Background_Job @_\n";
     while (1) {
         if    ($_[0] eq '-stdin')  { shift; $stdin  = shift; }
         elsif ($_[0] eq '-stdout') { shift; $stdout = shift; }
@@ -102,10 +122,21 @@ sub Background_Job(@) {
             open STDERR, ">$stderr"
                 or die "gcc-wrapper failed to open stderr $stderr\n";
         }
+        Log "Child, exec @command\n";
         exec @command;
     }
     else {
+        Log "Parent, returning $pid\n";
         # I'm the parent, return the child pid
         return $pid;
     }
 } # Background_Job
+
+# ----------------------------------------------------------------------
+
+sub Log(@) {
+    my $log_file = "/tmp/gcc-wrapper-$start_time-$$";
+    open LOG, ">$log_file";
+    print LOG @_;
+    close LOG;
+} # Log
